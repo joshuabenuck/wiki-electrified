@@ -5,16 +5,17 @@ class WikiBar {
   }
 
   add(wiki) {
-    let iconTab = $("<div>").attr({id: wiki.id}).append(
-      $("<img>").attr({src: wiki.favicon})
-        .css({width: '10px', height: '10px'})
-    ).appendTo("#wikiBar")
+    let iconTab = $("<div>").attr({id: wiki.id}).addClass('wikiIcon')
+      .append(
+        $("<img>").attr({src: wiki.favicon})
+          .css({width: '10px', height: '10px'})
+      ).appendTo("#wikiBar")
     wiki.on('icon-changed', (url) => {
       iconTab.find("img").attr({src: url})
     })
     wiki.on('activate', () => {
       $('.selected').removeClass('selected')
-      $(`${wiki.id}`).addClass('selected')
+      $(`#${wiki.id} > img`).addClass('selected')
     })
   }
 }
@@ -53,7 +54,6 @@ class Wiki {
   _createView(win) {
     // This must not be called until ready to display.
     // Site will fail to initialize otherwise as scrollLeft always returns 0.
-    console.log('creating view')
     this.view = new BrowserView({
       webPreferences: {
         nodeIntegration: false
@@ -61,7 +61,6 @@ class Wiki {
     })
     this.view.webContents.on('page-favicon-updated', (e, urls) => {
       this.favicon = urls[0]
-      console.log('!! favicon: ', this.favicon)
       this.iconListeners.forEach((l) => {
         l(this.favicon)
       })
@@ -88,12 +87,9 @@ class Wiki {
   }
 
   activate(win) {
-    console.log('activate')
     Wiki.active = this
     this.display(win)
-    this.activateListeners.forEach((l) => {
-      l()
-    })
+    this.activateListeners.forEach((l) => { l() })
   }
 
   display(win) {
@@ -146,7 +142,7 @@ Wiki.wikis = []
 Wiki.add = (wiki) => {
   Wiki.wikis.push(wiki)
   wikiBar.add(wiki)
-  if (!Wiki.active) wiki.activate()
+  if (!Wiki.active) wiki.activate(win)
 }
 
 Wiki.displayByIndex = (index) => {
@@ -203,10 +199,10 @@ events = [
   'remote-get-guest-web-contents'
 ]
 
+let win = getCurrentWindow()
 let local = new Wiki('http://localhost:31371')
 //new Wiki('https://server.wiki.randombits.xyz')
 //events.forEach((e) => local.on(e, (...args) => console.log('view', e, args)))
-let win = getCurrentWindow()
 local.display(win)
 new Wiki('https://wiki.randombits.xyz')
 /*
