@@ -14,6 +14,7 @@ Wiki.active.view.webContents.isDevToolsOpened() ?
 `
 const cleanup = (e) => {
   console.log('destroying views')
+  win.setBrowserView(null)
   BrowserView.getAllViews().forEach((v) => {
     v.removeAllListeners()
     v.destroy()
@@ -42,7 +43,7 @@ const template = [
         click: () => {
           cleanup()
           win.reload()
-          win.on('close', cleanup)
+          //win.on('close', cleanup)
         }
       },
       {
@@ -189,7 +190,7 @@ function createWindow () {
     'move',
     'enter-full-screen'
   ]
-  win.on('close', cleanup)
+  //win.on('close', cleanup)
   //winEvents.forEach((e) => win.on(e, (...args) => console.log('win event', e, args)))
   win.loadURL(`file://${__dirname}/electrified.html`)
   //win.webContents.openDevTools()
