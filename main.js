@@ -1,11 +1,28 @@
 const debug = require('debug')
 //debug.enable('*')
 //debug.enable('express:*')
-const {app, Menu, BrowserWindow} = require('electron')
+const {app, Menu, BrowserWindow, BrowserView} = require('electron')
 const server = require('wiki-server')
 const path = require('path')
 
 //require("electron-reload")(__dirname)
+
+let toggleDevTools = `
+Wiki.active.view.webContents.isDevToolsOpened() ? 
+  Wiki.active.view.webContents.closeDevTools() :
+  Wiki.active.view.webContents.openDevTools({mode: 'right'})
+`
+const cleanup = (e) => {
+  console.log('destroying views')
+  BrowserView.getAllViews().forEach((v) => {
+    v.removeAllListeners()
+    v.destroy()
+  })
+  console.log('removing listeners')
+  win.removeAllListeners()
+  console.log('done with cleanup')
+  //events.forEach((e) => win.webContents.on(e, (...args) => console.log('win', e, args)))
+}
 
 const template = [
   {
@@ -14,40 +31,65 @@ const template = [
       {
         label: 'Reload',
         accelerator: 'CmdOrCtrl+R',
-        click: () => win.reload()
+        click: () => win.webContents.executeJavaScript(
+          "let webContents = Wiki.active.view.webContents;" + 
+          "webContents.loadURL(webContents.getURL())"
+        )
+      },
+      {
+        label: 'Reload Electrified',
+        accelerator: 'Shift+CmdOrCtrl+R',
+        click: () => {
+          cleanup()
+          win.reload()
+          win.on('close', cleanup)
+        }
+      },
+      {
+        label: 'Toggle Main DevTools',
+        accelerator: 'Shift+CmdOrCtrl+I',
+        click: () => {
+          win.webContents.isDevToolsOpened() ? 
+            win.webContents.closeDevTools() :
+            win.webContents.openDevTools({mode: 'undocked'})
+        }
       },
       {
         label: 'Toggle DevTools',
         accelerator: 'Alt+CmdOrCtrl+I',
-        click: () => win.toggleDevTools()
+        click: () => win.webContents.executeJavaScript( toggleDevTools )
+      },
+      {
+        label: 'Toggle Wiki Visibility',
+        accelerator: 'CmdOrCtrl+H',
+        click: () => win.webContents.executeJavaScript(
+          "Wiki.active.toggleVisibility(win)"
+        )
+      },
+      {
+        label: 'Show Wiki 1',
+        accelerator: 'CmdOrCtrl+1',
+        click: () => {
+          console.log('Activating 1st wiki')
+          win.webContents.executeJavaScript("Wiki.displayByIndex(0)")
+        }
+      },
+      {
+        label: 'Show Wiki 2',
+        accelerator: 'CmdOrCtrl+2',
+        click: () => {
+          console.log('Activating 2nd wiki')
+          win.webContents.executeJavaScript("Wiki.displayByIndex(1)")
+        }
+      },
+      {
+        label: 'Show Wiki 3',
+        accelerator: 'CmdOrCtrl+3',
+        click: () => {
+          console.log('Activating 3rd wiki')
+          win.webContents.executeJavaScript("Wiki.displayByIndex(2)")
+        }
       }
-    ]
-  },
-  {
-    label: 'Edit',
-    submenu: [
-      { role: 'undo' },
-      { role: 'redo' },
-      { type: 'separator' },
-      { role: 'cut' },
-      { role: 'copy' },
-      { role: 'paste' },
-      { role: 'pasteandmatchstyle' },
-      { role: 'delete' },
-      { role: 'selectall' }
-    ]
-  },
-  {
-    label: 'View',
-    submenu: [
-      //{ role: 'reload' },
-      //{ role: 'toggledevtools' },
-      //{ type: 'separator' },
-      { role: 'resetzoom' },
-      { role: 'zoomin' },
-      { role: 'zoomout' },
-      { type: 'separator' },
-      { role: 'togglefullscreen' }
     ]
   },
   {
@@ -60,45 +102,100 @@ const template = [
         role: 'close'
       }
     ]
-  },
-  {
-    role: 'help',
-    submenu: [
-      {
-        label: 'Learn More',
-        click () { require('electron').shell.openExternal('http://electron.atom.io') }
-      }
-    ]
   }
 ]
-
 const menu = Menu.buildFromTemplate(template)
 Menu.setApplicationMenu(menu)
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, wikiServer
+let win
 
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
     webPreferences: {
-      nodeIntegration: false
+      nodeIntegration: true
     },
     autoHideMenuBar: true,
     width: 800,
-    height: 600
+    height: 600,
+    useContentSize: true
   })
-  //win.setMenu(null);
-
-  // and load the index.html of the app.
-  //win.loadURL(`file://${__dirname}/index.html`)
-  win.loadURL('http://localhost:31371/view/welcome-visitors')
-
-  // Open the DevTools.
-  win.webContents.openDevTools()
+  events = [
+    'did-finish-frame-load',
+    'did-fail-load',
+    'did-frame-finish-load',
+    'did-start-loading',
+    'did-stop-loading',
+    'dom-ready',
+    'page-favicon-updated',
+    'new-window',
+    'will-navigate',
+    'did-start-navigation',
+    'will-redirect',
+    'did-redirect-navigation',
+    'did-navigate',
+    'did-frame-navigate',
+    'did-navigate-in-page',
+    'will-prevent-upload',
+    'crashed',
+    'unresponsive',
+    'responsive',
+    'plugin-crashed',
+    'destroyed',
+    //'before-input-event',
+    'devtools-opened',
+    'devtools-closed',
+    'devtools-focused',
+    'certificate-error',
+    'select-client-certificate',
+    'login',
+    'found-in-page',
+    'media-started-playing',
+    'media-paused',
+    'did-change-theme-color',
+    'update-target-url',
+    //'cursor-changed',
+    'context-menu',
+    'select-bluetooth-device',
+    'paint',
+    'devtools-reload-page',
+    'will-attach-webview',
+    'did-attach-webview',
+    //'console-message',
+    'remote-require',
+    'remote-get-global',
+    'remote-get-builtin',
+    'remote-get-current-window',
+    'remote-get-current-web-contents',
+    'remote-get-guest-web-contents'
+  ]
+  winEvents = [
+    'page-title-updated',
+    'close',
+    'closed',
+    'unresponsive',
+    'responsive',
+    'blur',
+    'focus',
+    'show',
+    'hide',
+    'read-to-shaow',
+    'maximize',
+    'unmaximize',
+    'minimize',
+    'restore',
+    'resize',
+    'move',
+    'enter-full-screen'
+  ]
+  win.on('close', cleanup)
+  //winEvents.forEach((e) => win.on(e, (...args) => console.log('win event', e, args)))
+  win.loadURL(`file://${__dirname}/electrified.html`)
+  //win.webContents.openDevTools()
 
   win.webContents.on('did-finish-load', () => {
-      win.webContents.focus()
+    //win.webContents.focus()
   })
 
   // Emitted when the window is closed.
@@ -110,6 +207,7 @@ function createWindow () {
   })
 }
 
+let wikiServer
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -160,3 +258,4 @@ app.on('activate', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
