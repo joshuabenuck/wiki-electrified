@@ -26,7 +26,7 @@ class WikiBar {
   }
 
   activateByIndex(i) {
-    this.wikis[i].display(this.win)
+    this.wikis[i].activate(this.win)
   }
 }
 
@@ -90,11 +90,11 @@ class Wiki {
   }
 
   activate(win) {
-    this.display(win)
+    this._display(win)
     this.listeners['activate'].forEach((l) => { l() })
   }
 
-  display(win) {
+  _display(win) {
     if (!this.view) { this._createView(win) }
     win.webContents.focus()
     win.setBrowserView(this.view)
@@ -103,7 +103,7 @@ class Wiki {
   }
 
   toggleVisibility(win) {
-    if (!this.view) { this.display(win); return }
+    if (!this.view) { this._display(win); return }
     let view = win.getBrowserView() ? null : this.view
     win.setBrowserView(view)
   }

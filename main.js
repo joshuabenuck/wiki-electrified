@@ -27,44 +27,6 @@ const template = [
     label: 'Electrified',
     submenu: [
       {
-        label: 'Reload',
-        accelerator: 'CmdOrCtrl+R',
-        click: () => win.webContents.executeJavaScript(
-          "let webContents = wikiBar.active.view.webContents;" + 
-          "webContents.loadURL(webContents.getURL())"
-        )
-      },
-      {
-        label: 'Reload Electrified',
-        accelerator: 'Shift+CmdOrCtrl+R',
-        click: () => {
-          cleanup()
-          win.reload()
-          //win.on('close', cleanup)
-        }
-      },
-      {
-        label: 'Toggle Main DevTools',
-        accelerator: 'Shift+CmdOrCtrl+I',
-        click: () => {
-          win.webContents.isDevToolsOpened() ? 
-            win.webContents.closeDevTools() :
-            win.webContents.openDevTools({mode: 'undocked'})
-        }
-      },
-      {
-        label: 'Toggle DevTools',
-        accelerator: 'Alt+CmdOrCtrl+I',
-        click: () => win.webContents.executeJavaScript( toggleDevTools )
-      },
-      {
-        label: 'Toggle Wiki Visibility',
-        accelerator: 'CmdOrCtrl+H',
-        click: () => win.webContents.executeJavaScript(
-          "wikiBar.active.toggleVisibility(win)"
-        )
-      },
-      {
         label: 'Show Wiki 1',
         accelerator: 'CmdOrCtrl+1',
         click: () => {
@@ -88,6 +50,105 @@ const template = [
           win.webContents.executeJavaScript("wikiBar.activateByIndex(2)")
         }
       }
+    ]
+  },
+  {
+    label: 'Edit',
+    submenu: [
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      { role: 'pasteandmatchstyle' },
+      { role: 'delete' },
+      { role: 'selectall' }
+    ]
+  },
+  {
+    label: 'View',
+    submenu: [
+      {
+        label: 'Reload Wiki',
+        accelerator: 'CmdOrCtrl+R',
+        click: () => win.webContents.executeJavaScript(
+          "let webContents = wikiBar.active.view.webContents;" + 
+          "webContents.loadURL(webContents.getURL())"
+        )
+      },
+      {
+        label: 'Reload Electrified',
+        accelerator: 'Shift+CmdOrCtrl+R',
+        click: () => {
+          cleanup()
+          win.reload()
+          //win.on('close', cleanup)
+        }
+      },
+      {
+        label: 'Toggle Electrified DevTools',
+        accelerator: 'Shift+CmdOrCtrl+I',
+        click: () => {
+          win.webContents.isDevToolsOpened() ? 
+            win.webContents.closeDevTools() :
+            win.webContents.openDevTools({mode: 'undocked'})
+        }
+      },
+      {
+        label: 'Toggle Wiki DevTools',
+        accelerator: 'Alt+CmdOrCtrl+I',
+        click: () => win.webContents.executeJavaScript( toggleDevTools )
+      },
+      {
+        label: 'Toggle Wiki Visibility',
+        accelerator: 'CmdOrCtrl+H',
+        click: () => win.webContents.executeJavaScript(
+          "wikiBar.active.toggleVisibility(win)"
+        )
+      },
+      { type: 'separator' },
+      {
+        // NOTE: While the recommendation is to use a role for these zoom commands,
+        // we need to customize the click handler so we are stuck reimplmenting
+        // some of this which others get for free.
+        label: 'Actual Size',
+        accelerator: 'CmdOrCtrl+0',
+        click: () => {
+          win.webContents.executeJavaScript(`
+            webContents = wikiBar.active.view.webContents
+            webContents.getZoomFactor((zf) => {
+              webContents.setZoomFactor(1.0)
+            })
+          `)
+        }
+      },
+      {
+        label: 'Zoom In',
+        accelerator: 'CmdOrCtrl+Plus',
+        click: () => {
+          win.webContents.executeJavaScript(`
+            webContents = wikiBar.active.view.webContents
+            webContents.getZoomFactor((zf) => {
+              webContents.setZoomFactor(zf+0.1)
+            })
+          `)
+        }
+      },
+      {
+        label: 'Zoom Out',
+        accelerator: 'CmdOrCtrl+-',
+        click: () => {
+          win.webContents.executeJavaScript(`
+            webContents = wikiBar.active.view.webContents
+            webContents.getZoomFactor((zf) => {
+              webContents.setZoomFactor(zf-0.1)
+            })
+          `)
+        }
+      },
+      { type: 'separator' },
+      { role: 'togglefullscreen' }
     ]
   },
   {
