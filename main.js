@@ -8,20 +8,17 @@ const path = require('path')
 //require("electron-reload")(__dirname)
 
 let toggleDevTools = `
-Wiki.active.view.webContents.isDevToolsOpened() ? 
-  Wiki.active.view.webContents.closeDevTools() :
-  Wiki.active.view.webContents.openDevTools({mode: 'right'})
+wikiBar.active.view.webContents.isDevToolsOpened() ? 
+  wikiBar.active.view.webContents.closeDevTools() :
+  wikiBar.active.view.webContents.openDevTools({mode: 'right'})
 `
 const cleanup = (e) => {
-  console.log('destroying views')
   win.setBrowserView(null)
   BrowserView.getAllViews().forEach((v) => {
     v.removeAllListeners()
     v.destroy()
   })
-  console.log('removing listeners')
   win.removeAllListeners()
-  console.log('done with cleanup')
   //events.forEach((e) => win.webContents.on(e, (...args) => console.log('win', e, args)))
 }
 
@@ -33,7 +30,7 @@ const template = [
         label: 'Reload',
         accelerator: 'CmdOrCtrl+R',
         click: () => win.webContents.executeJavaScript(
-          "let webContents = Wiki.active.view.webContents;" + 
+          "let webContents = wikiBar.active.view.webContents;" + 
           "webContents.loadURL(webContents.getURL())"
         )
       },
@@ -64,7 +61,7 @@ const template = [
         label: 'Toggle Wiki Visibility',
         accelerator: 'CmdOrCtrl+H',
         click: () => win.webContents.executeJavaScript(
-          "Wiki.active.toggleVisibility(win)"
+          "wikiBar.active.toggleVisibility(win)"
         )
       },
       {
@@ -72,7 +69,7 @@ const template = [
         accelerator: 'CmdOrCtrl+1',
         click: () => {
           console.log('Activating 1st wiki')
-          win.webContents.executeJavaScript("Wiki.displayByIndex(0)")
+          win.webContents.executeJavaScript("wikiBar.activateByIndex(0)")
         }
       },
       {
@@ -80,7 +77,7 @@ const template = [
         accelerator: 'CmdOrCtrl+2',
         click: () => {
           console.log('Activating 2nd wiki')
-          win.webContents.executeJavaScript("Wiki.displayByIndex(1)")
+          win.webContents.executeJavaScript("wikiBar.activateByIndex(1)")
         }
       },
       {
@@ -88,7 +85,7 @@ const template = [
         accelerator: 'CmdOrCtrl+3',
         click: () => {
           console.log('Activating 3rd wiki')
-          win.webContents.executeJavaScript("Wiki.displayByIndex(2)")
+          win.webContents.executeJavaScript("wikiBar.activateByIndex(2)")
         }
       }
     ]

@@ -1,10 +1,15 @@
 const {getCurrentWindow, BrowserView} = require('electron').remote
 
 class WikiBar {
-  constructor() {
+  constructor(win) {
+    this.win = win
+    this.wikis = []
+    this.active = null
   }
 
   add(wiki) {
+    if(this.active == null) this.active = wiki
+    this.wikis.push(wiki)
     let iconTab = $("<div>").attr({id: wiki.id}).addClass('wikiIcon')
       .append(
         $("<img>").attr({src: wiki.favicon})
@@ -14,12 +19,16 @@ class WikiBar {
       iconTab.find("img").attr({src: url})
     })
     wiki.on('activate', () => {
+      this.active = wiki
       $('.selected').removeClass('selected')
       $(`#${wiki.id} > img`).addClass('selected')
     })
   }
+
+  activateByIndex(i) {
+    this.wikis[i].display(this.win)
+  }
 }
-let wikiBar = new WikiBar()
 
 class Wiki {
   constructor(url) {
@@ -29,12 +38,14 @@ class Wiki {
     this.favicon = null // need to listen to event to get
     this.queuedListeners = []
     this.id = this._itemId()
-    this.iconListeners = []
-    this.activateListeners = []
-    Wiki.add(this)
+    this.listeners = {}
+    this.localEvents = ['activate', 'icon-changed']
+    this.localEvents.forEach((e) => {
+      this.listeners[e] = []
+    })
   }
 
-  // next three methods lifted from random.coffee
+  // begin: from random.coffee
   _randomByte() {
     return (((1+Math.random())*0x100)|0).toString(16).substring(1)
   }
@@ -50,6 +61,7 @@ class Wiki {
   _itemId() {
     return this._randomBytes(8)
   }
+  // end: from random.coffee
 
   _createView(win) {
     // This must not be called until ready to display.
@@ -61,35 +73,25 @@ class Wiki {
     })
     this.view.webContents.on('page-favicon-updated', (e, urls) => {
       this.favicon = urls[0]
-      this.iconListeners.forEach((l) => {
+      this.listeners['icon-changed'].forEach((l) => {
         l(this.favicon)
       })
     })
-    for (var listener of this.queuedListeners) {
+    for (let listener of this.queuedListeners) {
       this.on.apply(this, listener)
     }
-    console.log('setting bounds')
     this.queuedListeners = []
     let [width, height] = win.getContentSize()
     win.setBrowserView(this.view)
     this.view.setBounds({ x: 20, y: 0, width: width-20, height: height })
     this.view.setAutoResize({ width: true, height: true })
-    console.log('setting view')
-    /*
-    initialFocus = () => {
-      displayWiki(initialWikiView)
-      initialWikiView.webContents.off('dom-ready', initialFocus)
-    }
-    initialWikiView.webContents.on('dom-ready', initialFocus)
-    */
     this.view.webContents.loadURL(this.url)
     return this.view
   }
 
   activate(win) {
-    Wiki.active = this
     this.display(win)
-    this.activateListeners.forEach((l) => { l() })
+    this.listeners['activate'].forEach((l) => { l() })
   }
 
   display(win) {
@@ -98,7 +100,6 @@ class Wiki {
     win.setBrowserView(this.view)
     this.view.webContents.focus()
     //this.view.webContents.openDevTools()
-    Wiki.active = this
   }
 
   toggleVisibility(win) {
@@ -116,14 +117,9 @@ class Wiki {
   on(...args) {
     if(this.view) {
       let eventName = args[0]
-      if (eventName == 'icon-changed') {
+      if (this.localEvents.includes(eventName)) {
         let listener = args[1]
-        this.iconListeners.push(listener)
-        return
-      }
-      if (eventName == 'activate') {
-        let listener = args[1]
-        this.activateListeners.push(listener)
+        this.listeners[eventName].push(listener)
         return
       }
       this.view.webContents.on.apply(this, args)
@@ -134,18 +130,6 @@ class Wiki {
   off(...args) {
     this.view.webContents.off.apply(args)
   }
-}
-
-Wiki.wikis = []
-
-Wiki.add = (wiki) => {
-  Wiki.wikis.push(wiki)
-  wikiBar.add(wiki)
-  if (!Wiki.active) wiki.activate(win)
-}
-
-Wiki.displayByIndex = (index) => {
-  Wiki.wikis[index].activate(win)
 }
 
 events = [
@@ -198,17 +182,16 @@ events = [
   'remote-get-guest-web-contents'
 ]
 
-let win = getCurrentWindow()
-let local = new Wiki('http://localhost:31371')
-//new Wiki('https://server.wiki.randombits.xyz')
+// TODO: Remove global references.
+let wikiBar = new WikiBar(getCurrentWindow())
+{ // reduce scope of initialization logic
+  let wikiUrls = [
+    'http://localhost:31371',
+    'https://wiki.randombits.xyz'
+  ]
+  wikiUrls.forEach((u) => wikiBar.add(new Wiki(u)))
+  wikiBar.activateByIndex(0)
+}
+
 //events.forEach((e) => local.on(e, (...args) => console.log('view', e, args)))
-local.display(win)
-new Wiki('https://wiki.randombits.xyz')
-/*
-window.addEventListener('beforeunload', (e) => {
-  console.log('unloading')
-  win.removeAllListeners()
-  Wiki.destroyAll(win)
-  e.returnValue = false
-})
-*/
+
