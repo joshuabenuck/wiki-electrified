@@ -11,6 +11,7 @@ class WikiBar {
     if(this.active == null) this.active = wiki
     this.wikis.push(wiki)
     let iconTab = $("<div>").attr({id: wiki.id}).addClass('wikiIcon')
+      .click(() => wiki.activate(this.win))
       .append(
         $("<img>").attr({src: wiki.favicon})
           .css({width: '10px', height: '10px'})
@@ -26,7 +27,10 @@ class WikiBar {
   }
 
   activateByIndex(i) {
-    this.wikis[i].activate(this.win)
+    if (0 <= i < this.wikis.length) {
+      this.wikis[i].activate(this.win)
+    }
+    console.log(`Unable to active wiki index ${i}. Out of range.`)
   }
 }
 

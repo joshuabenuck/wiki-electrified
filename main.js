@@ -25,32 +25,16 @@ const cleanup = (e) => {
 const template = [
   {
     label: 'Electrified',
-    submenu: [
-      {
-        label: 'Show Wiki 1',
-        accelerator: 'CmdOrCtrl+1',
+    submenu: [1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {
+      return {
+        label: `Show Wiki ${i}`,
+        accelerator: `CmdOrCtrl+${i}`,
         click: () => {
-          console.log('Activating 1st wiki')
-          win.webContents.executeJavaScript("wikiBar.activateByIndex(0)")
-        }
-      },
-      {
-        label: 'Show Wiki 2',
-        accelerator: 'CmdOrCtrl+2',
-        click: () => {
-          console.log('Activating 2nd wiki')
-          win.webContents.executeJavaScript("wikiBar.activateByIndex(1)")
-        }
-      },
-      {
-        label: 'Show Wiki 3',
-        accelerator: 'CmdOrCtrl+3',
-        click: () => {
-          console.log('Activating 3rd wiki')
-          win.webContents.executeJavaScript("wikiBar.activateByIndex(2)")
+          console.log(`Activating wiki: ${i}`)
+          win.webContents.executeJavaScript(`wikiBar.activateByIndex(${i-1})`)
         }
       }
-    ]
+    })
   },
   {
     label: 'Edit',
