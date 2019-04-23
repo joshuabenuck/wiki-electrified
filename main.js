@@ -205,7 +205,7 @@ function createWindow () {
   })
 }
 
-let wikiServer
+let wikiApp, wikiServer
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -224,26 +224,23 @@ app.on('ready', () => {
     cookieSecret: require('crypto').randomBytes(64).toString('hex')
   }
 
-  wikiServer = server(config)
-  wikiServer.on('owner-set', (e) => {
-    serv = wikiServer.listen(wikiServer.startOpts.port, wikiServer.startOpts.host)
-    console.log("Federated Wiki server listening on", wikiServer.startOpts.port,
-      "in mode:", wikiServer.settings.env)
+  wikiApp = server(config)
+  wikiApp.on('owner-set', (e) => {
+    wikiServer = wikiApp.listen(wikiApp.startOpts.port, wikiApp.startOpts.host)
+    console.log("Federated Wiki server listening on", wikiApp.startOpts.port,
+      "in mode:", wikiApp.settings.env)
     /*if(argv.security_type == './security') {
       console.log('INFORMATION : Using default security - Wiki will be read-only\n')
     }*/
-    wikiServer.emit('running-serv', serv)
+    wikiApp.emit('running-serv', wikiServer)
     createWindow()
   })
 })
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
-  // On macOS it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+  wikiServer.close()
+  app.quit()
 })
 
 app.on('activate', () => {
