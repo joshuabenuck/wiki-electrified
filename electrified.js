@@ -71,10 +71,10 @@ class Wiki {
     console.log('setting bounds')
     this.queuedListeners = []
     let [width, height] = win.getContentSize()
+    win.setBrowserView(this.view)
     this.view.setBounds({ x: 20, y: 0, width: width-20, height: height })
     this.view.setAutoResize({ width: true, height: true })
     console.log('setting view')
-    win.setBrowserView(this.view)
     /*
     initialFocus = () => {
       displayWiki(initialWikiView)
@@ -109,7 +109,6 @@ class Wiki {
 
   destroy(win) {
     this.queuedListeners = []
-    win.setBrowserView(null)
     if (!this.view) return
     this.view.destroy()
   }
