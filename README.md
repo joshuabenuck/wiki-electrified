@@ -17,6 +17,10 @@ npm install
 npm start
 ```
 
+## Development Notes
+
+The development journal and design notes are at [fed.wiki.randombits.xyz](https://fed.wiki.randombits.xyz/electrified-wiki.html).
+
 ## TODOs
 
 There's a lot missing from this tool. Here's a list of the top of mind items.
