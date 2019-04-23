@@ -25,11 +25,11 @@ The development journal and design notes are at [fed.wiki.randombits.xyz](https:
 
 There's a lot missing from this tool. Here's a list of the top of mind items.
 
+- [ ] Support for logging into a wiki.
+- [ ] Ability to open arbitrary fedwiki sites.
 - [ ] Saving of currently open wikis and their states in localStorage.
 - [ ] Caching of fedwiki site favicons across app restarts.
-- [ ] Ability to open arbitrary fedwiki sites.
 - [ ] Running internal wiki server in non-read-only mode.
-- [ ] Support for logging into a wiki.
 - [ ] Properly update the title to reflect currently displayed wiki.
 - [ ] Ability to suppress startup of internal wiki server instance.
 - [ ] Support for passing in command line args to customize server properties.

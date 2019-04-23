@@ -72,7 +72,8 @@ class Wiki {
     // Site will fail to initialize otherwise as scrollLeft always returns 0.
     this.view = new BrowserView({
       webPreferences: {
-        nodeIntegration: false
+        nodeIntegration: false,
+        preload: `${__dirname}/preload.js`
       }
     })
     this.view.webContents.on('page-favicon-updated', (e, urls) => {
@@ -190,12 +191,15 @@ events = [
 let wikiBar = new WikiBar(getCurrentWindow())
 { // reduce scope of initialization logic
   let wikiUrls = [
-    'http://localhost:31371',
-    'https://wiki.randombits.xyz'
+    'https://wiki.randombits.xyz',
+    'http://localhost:31371'
   ]
-  wikiUrls.forEach((u) => wikiBar.add(new Wiki(u)))
+  wikiUrls.forEach((u) => {
+    let wiki = new Wiki(u)
+    events.forEach((e) => wiki.on(e, (...args) => console.log('view', e, args)))
+    wikiBar.add(wiki)
+  })
   wikiBar.activateByIndex(0)
 }
 
-//events.forEach((e) => local.on(e, (...args) => console.log('view', e, args)))
 
