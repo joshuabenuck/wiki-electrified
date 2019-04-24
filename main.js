@@ -4,8 +4,100 @@ const debug = require('debug')
 const {app, Menu, BrowserWindow, BrowserView} = require('electron')
 const server = require('wiki-server')
 const path = require('path')
+const optimist = require('optimist')
+const cc = require('config-chain')
 
 //require("electron-reload")(__dirname)
+
+// begin: taken from wiki/cli.coffee
+getUserHome = () => {
+  return process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE
+}
+
+argv = optimist
+  .usage('Usage: $0')
+  .options('port', {
+    alias     : 'p',
+    describe  : 'Port'
+  })
+  .options('data', {
+    alias     : 'd',
+    describe  : 'location of flat file data'
+  })
+  .options('root', {
+    alias     : 'r',
+    describe  : 'Application root folder'
+  })
+  .options('security_type', {
+    describe  : 'The security plugin to use, see documentation for additional parameters'
+  })
+  .options('secure_cookie', {
+    describe  : 'When true, session cookie will only be sent over SSL.',
+    boolean   : false
+  })
+  .options('session_duration', {
+    describe  : 'The wiki logon, session, duration in days'
+  })
+  .options('id', {
+    describe  : 'Set the location of the owner identity file'
+  })
+  .options('uploadLimit', {
+    describe  : 'Set the upload size limit, limits the size page content items, and pages that can be forked'
+  })
+  .options('help', {
+    alias     : 'h',
+    boolean   : true,
+    describe  : 'Show this help info and exit'
+  })
+  .options('config', {
+    alias     : 'conf',
+    describe  : 'Optional config file.'
+  })
+  .options('version', {
+    alias     : 'v',
+    describe  : 'Show version number and exit'
+  })
+  .argv
+
+config = cc(argv,
+  argv.config,
+  'config.json',
+  path.join(__dirname, '..', 'config.json'),
+  path.join(getUserHome(), '.wiki', 'config.json'),
+  cc.env('wiki_'), {
+    port: 31371,
+    root: path.dirname(require.resolve('wiki-server')),
+    home: 'welcome-visitors',
+    security_type: './security',
+    data: path.join(getUserHome(), '.wiki'), // see also defaultargs
+    packageDir: path.resolve(path.join(__dirname, 'node_modules')),
+    cookieSecret: require('crypto').randomBytes(64).toString('hex')
+  }).store
+
+// If h/help is set print the generated help message and exit.
+if (argv.help) {
+  optimist.showHelp()
+  return
+}
+
+// If v/version is set print the version of the wiki components and exit.
+if (argv.version) {
+  console.log('wiki: ' + require('./package').version)
+  console.log('wiki-server: ' + require('wiki-server/package').version)
+  console.log('wiki-client: ' + require('wiki-client/package').version)
+  glob('wiki-security-*', {cwd: config.packageDir}, (e, plugins) => {
+    plugins.map((plugin) => {
+      console.log(plugin + ": " + require(plugin + "/package").version)
+    })
+  })
+  glob('wiki-plugin-*', {cwd: config.packageDir}, (e, plugins) => {
+    plugins.map((plugin) => {
+      console.log(plugin + ': ' + require(plugin + '/package').version)
+    })
+  return
+  })
+}
+// end: taken from wiki/cli.coffee
 
 let toggleDevTools = `
 wikiBar.active.view.webContents.isDevToolsOpened() ? 
@@ -149,6 +241,76 @@ const template = [
 ]
 const menu = Menu.buildFromTemplate(template)
 Menu.setApplicationMenu(menu)
+
+events = [
+  'did-finish-frame-load',
+  'did-fail-load',
+  'did-frame-finish-load',
+  'did-start-loading',
+  'did-stop-loading',
+  'dom-ready',
+  'page-favicon-updated',
+  'new-window',
+  'will-navigate',
+  'did-start-navigation',
+  'will-redirect',
+  'did-redirect-navigation',
+  'did-navigate',
+  'did-frame-navigate',
+  'did-navigate-in-page',
+  'will-prevent-upload',
+  'crashed',
+  'unresponsive',
+  'responsive',
+  'plugin-crashed',
+  'destroyed',
+  //'before-input-event',
+  'devtools-opened',
+  'devtools-closed',
+  'devtools-focused',
+  'certificate-error',
+  'select-client-certificate',
+  'login',
+  'found-in-page',
+  'media-started-playing',
+  'media-paused',
+  'did-change-theme-color',
+  'update-target-url',
+  //'cursor-changed',
+  'context-menu',
+  'select-bluetooth-device',
+  'paint',
+  'devtools-reload-page',
+  'will-attach-webview',
+  'did-attach-webview',
+  //'console-message',
+  'remote-require',
+  'remote-get-global',
+  'remote-get-builtin',
+  'remote-get-current-window',
+  'remote-get-current-web-contents',
+  'remote-get-guest-web-contents'
+]
+winEvents = [
+  'page-title-updated',
+  'close',
+  'closed',
+  'unresponsive',
+  'responsive',
+  'blur',
+  'focus',
+  'show',
+  'hide',
+  'read-to-shaow',
+  'maximize',
+  'unmaximize',
+  'minimize',
+  'restore',
+  'resize',
+  'move',
+  'enter-full-screen'
+]
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win
@@ -164,81 +326,10 @@ function createWindow () {
     height: 600,
     useContentSize: true
   })
-  events = [
-    'did-finish-frame-load',
-    'did-fail-load',
-    'did-frame-finish-load',
-    'did-start-loading',
-    'did-stop-loading',
-    'dom-ready',
-    'page-favicon-updated',
-    'new-window',
-    'will-navigate',
-    'did-start-navigation',
-    'will-redirect',
-    'did-redirect-navigation',
-    'did-navigate',
-    'did-frame-navigate',
-    'did-navigate-in-page',
-    'will-prevent-upload',
-    'crashed',
-    'unresponsive',
-    'responsive',
-    'plugin-crashed',
-    'destroyed',
-    //'before-input-event',
-    'devtools-opened',
-    'devtools-closed',
-    'devtools-focused',
-    'certificate-error',
-    'select-client-certificate',
-    'login',
-    'found-in-page',
-    'media-started-playing',
-    'media-paused',
-    'did-change-theme-color',
-    'update-target-url',
-    //'cursor-changed',
-    'context-menu',
-    'select-bluetooth-device',
-    'paint',
-    'devtools-reload-page',
-    'will-attach-webview',
-    'did-attach-webview',
-    //'console-message',
-    'remote-require',
-    'remote-get-global',
-    'remote-get-builtin',
-    'remote-get-current-window',
-    'remote-get-current-web-contents',
-    'remote-get-guest-web-contents'
-  ]
-  winEvents = [
-    'page-title-updated',
-    'close',
-    'closed',
-    'unresponsive',
-    'responsive',
-    'blur',
-    'focus',
-    'show',
-    'hide',
-    'read-to-shaow',
-    'maximize',
-    'unmaximize',
-    'minimize',
-    'restore',
-    'resize',
-    'move',
-    'enter-full-screen'
-  ]
-  //win.on('close', cleanup)
   //winEvents.forEach((e) => win.on(e, (...args) => console.log('win event', e, args)))
   win.loadURL(`file://${__dirname}/electrified.html`)
-  //win.webContents.openDevTools()
 
   win.webContents.on('did-finish-load', () => {
-    //win.webContents.focus()
   })
 
   // Emitted when the window is closed.
@@ -250,33 +341,20 @@ function createWindow () {
   })
 }
 
+
 let wikiApp, wikiServer
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-  getUserHome = () => {
-    return process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE
-  }
-
-  config = {
-    port: 31371,
-    root: path.dirname(require.resolve('wiki-server')),
-    home: 'welcome-visitors',
-    security_type: './security',
-    data: path.join(getUserHome(), '.wiki'), // see also defaultargs
-    packageDir: path.resolve(path.join(__dirname, 'node_modules')),
-    cookieSecret: require('crypto').randomBytes(64).toString('hex')
-  }
-
   wikiApp = server(config)
   wikiApp.on('owner-set', (e) => {
     wikiServer = wikiApp.listen(wikiApp.startOpts.port, wikiApp.startOpts.host)
     console.log("Federated Wiki server listening on", wikiApp.startOpts.port,
       "in mode:", wikiApp.settings.env)
-    /*if(argv.security_type == './security') {
+    if(argv.security_type == './security') {
       console.log('INFORMATION : Using default security - Wiki will be read-only\n')
-    }*/
+    }
     wikiApp.emit('running-serv', wikiServer)
     createWindow()
   })
@@ -289,11 +367,6 @@ app.on('window-all-closed', () => {
 })
 
 app.on('activate', () => {
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (win === null) {
-    createWindow()
-  }
 })
 
 // In this file you can include the rest of your app's specific main process
