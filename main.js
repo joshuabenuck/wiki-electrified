@@ -124,6 +124,13 @@ const template = [
         click: () => {
           win.webContents.executeJavaScript(`openSite()`)
         }
+      },
+      {
+        label: 'Close Wiki',
+        accelerator: 'CmdOrCtrl+W',
+        click: () => {
+          win.webContents.executeJavaScript(`wikiBar.remove(wikiBar.active)`)
+        }
       }
     ].concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {
       return {

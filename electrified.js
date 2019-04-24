@@ -6,15 +6,15 @@ const showDialog = (msg, cb) => {
     .css({width: '100%'})
   let dialog = $('<dialog>')
     .on('close', () => {
-      console.log('in close callback')
-      let answer = $('#dialogAnswer').value
+      let answer = document.getElementById('dialogAnswer').value
       cb(answer)
       dialog.remove()
     })
     .append($('<div>').text(msg))
-    .append($('<form>').append(input))
+    .append($('<form>').attr({method:'dialog'}).append(input))
     .appendTo($('body'))
   dialog[0].showModal()
+  getCurrentWindow().webContents.focus()
   input.focus()
 }
 
@@ -47,11 +47,9 @@ class WikiBar {
   activateByIndex(i) {
     if (i >= 0 && i < this.wikis.length) {
       this.wikis[i].activate(this.win)
+      return
     }
     console.log(`Unable to active wiki index ${i}. Out of range.`)
-    console.log(this.wikis.length)
-    let err = new Error()
-    console.log(err.stack)
   }
 
   activate(wiki) {
@@ -60,6 +58,21 @@ class WikiBar {
 
   hide(wiki) {
     wiki.hide(this.win)
+  }
+
+  removeById(i) {
+    this.remove(this.wikis[i])
+  }
+
+  remove(wiki) {
+    if (this.wikis.length == 1) {
+      console.log('refusing to close the last wiki')
+      return
+    }
+    this.wikis.splice(this.wikis.indexOf(wiki), 1)
+    $(`#${wiki.id}`).remove()
+    wiki.destroy(this.win)
+    this.activateByIndex(0)
   }
 }
 
@@ -105,6 +118,7 @@ class Wiki {
         preload: `${__dirname}/preload.js`
       }
     })
+    win.setBrowserView(this.view)
     this.view.webContents.on('page-favicon-updated', (e, urls) => {
       this.favicon = urls[0]
       this.listeners['icon-changed'].forEach((l) => {
@@ -116,7 +130,6 @@ class Wiki {
     }
     this.queuedListeners = []
     let [width, height] = win.getContentSize()
-    win.setBrowserView(this.view)
     this.view.setBounds({ x: 20, y: 0, width: width-20, height: height })
     this.view.setAutoResize({ width: true, height: true })
     this.view.webContents.loadURL(this.url)
@@ -226,11 +239,13 @@ let wikiBar = new WikiBar(getCurrentWindow())
 const openSite = () => {
   wikiBar.hide(wikiBar.active)
   showDialog("Enter the URL for the site:", (site) => {
+    if (site.indexOf('http://') == -1 &&
+      site.indexOf('https://') == -1) {
+      site = 'http://' + site
+    }
     console.log('loading wiki: ', site)
     let wiki = new Wiki(site)
-    console.log('adding to wiki bar')
     wikiBar.add(wiki)
-    console.log('activating')
     wikiBar.activate(wiki)
   })
 }
