@@ -1,5 +1,23 @@
 const {getCurrentWindow, BrowserView} = require('electron').remote
 
+const showDialog = (msg, cb) => {
+  let input = $('<input>')
+    .attr({id:'dialogAnswer', type:'text'})
+    .css({width: '100%'})
+  let dialog = $('<dialog>')
+    .on('close', () => {
+      console.log('in close callback')
+      let answer = $('#dialogAnswer').value
+      cb(answer)
+      dialog.remove()
+    })
+    .append($('<div>').text(msg))
+    .append($('<form>').append(input))
+    .appendTo($('body'))
+  dialog[0].showModal()
+  input.focus()
+}
+
 class WikiBar {
   constructor(win) {
     this.win = win
@@ -27,10 +45,21 @@ class WikiBar {
   }
 
   activateByIndex(i) {
-    if (0 <= i < this.wikis.length) {
+    if (i >= 0 && i < this.wikis.length) {
       this.wikis[i].activate(this.win)
     }
     console.log(`Unable to active wiki index ${i}. Out of range.`)
+    console.log(this.wikis.length)
+    let err = new Error()
+    console.log(err.stack)
+  }
+
+  activate(wiki) {
+    wiki.activate(this.win)
+  }
+
+  hide(wiki) {
+    wiki.hide(this.win)
   }
 }
 
@@ -113,6 +142,10 @@ class Wiki {
     win.setBrowserView(view)
   }
 
+  hide(win) {
+    win.setBrowserView(null)
+  }
+
   destroy(win) {
     this.queuedListeners = []
     if (!this.view) return
@@ -189,9 +222,21 @@ events = [
 
 // TODO: Remove global references.
 let wikiBar = new WikiBar(getCurrentWindow())
+
+const openSite = () => {
+  wikiBar.hide(wikiBar.active)
+  showDialog("Enter the URL for the site:", (site) => {
+    console.log('loading wiki: ', site)
+    let wiki = new Wiki(site)
+    console.log('adding to wiki bar')
+    wikiBar.add(wiki)
+    console.log('activating')
+    wikiBar.activate(wiki)
+  })
+}
+
 { // reduce scope of initialization logic
   let wikiUrls = [
-    'https://wiki.randombits.xyz',
     'http://localhost:31371'
   ]
   wikiUrls.forEach((u) => {

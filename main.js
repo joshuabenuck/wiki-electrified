@@ -117,7 +117,15 @@ const cleanup = (e) => {
 const template = [
   {
     label: 'Electrified',
-    submenu: [1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {
+    submenu: [
+      {
+        label: 'Open Wiki',
+        accelerator: 'CmdOrCtrl+O',
+        click: () => {
+          win.webContents.executeJavaScript(`openSite()`)
+        }
+      }
+    ].concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {
       return {
         label: `Show Wiki ${i}`,
         accelerator: `CmdOrCtrl+${i}`,
@@ -126,7 +134,7 @@ const template = [
           win.webContents.executeJavaScript(`wikiBar.activateByIndex(${i-1})`)
         }
       }
-    })
+    }))
   },
   {
     label: 'Edit',
