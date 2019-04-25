@@ -53,11 +53,19 @@ argv = optimist
     alias     : 'conf',
     describe  : 'Optional config file.'
   })
+  .options('wikis', {
+    describe  : 'List of wikis to open.'
+  })
   .options('version', {
     alias     : 'v',
     describe  : 'Show version number and exit'
   })
   .argv
+
+if (argv.wikis) {
+  argv.wikis = argv.wikis.split(",")
+  argv.wikis.map((w) => w.replace(/^\s+|\s+$/g, ''))
+}
 
 config = cc(argv,
   argv.config,
@@ -71,7 +79,8 @@ config = cc(argv,
     security_type: './security',
     data: path.join(getUserHome(), '.wiki'), // see also defaultargs
     packageDir: path.resolve(path.join(__dirname, 'node_modules')),
-    cookieSecret: require('crypto').randomBytes(64).toString('hex')
+    cookieSecret: require('crypto').randomBytes(64).toString('hex'),
+    wikis: ["http://localhost:31371"]
   }).store
 
 // If h/help is set print the generated help message and exit.
@@ -334,7 +343,8 @@ function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      additionalArguments: [ JSON.stringify(config.wikis) ]
     },
     autoHideMenuBar: true,
     width: 800,

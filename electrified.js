@@ -129,8 +129,6 @@ class Wiki {
       this.on.apply(this, listener)
     }
     this.queuedListeners = []
-    let [width, height] = win.getContentSize()
-    this.view.setBounds({ x: 20, y: 0, width: width-20, height: height })
     this.view.setAutoResize({ width: true, height: true })
     this.view.webContents.loadURL(this.url)
     return this.view
@@ -145,6 +143,8 @@ class Wiki {
     if (!this.view) { this._createView(win) }
     win.webContents.focus()
     win.setBrowserView(this.view)
+    let [width, height] = win.getContentSize()
+    this.view.setBounds({ x: 20, y: 0, width: width-20, height: height })
     this.view.webContents.focus()
     //this.view.webContents.openDevTools()
   }
@@ -251,12 +251,11 @@ const openSite = () => {
 }
 
 { // reduce scope of initialization logic
-  let wikiUrls = [
-    'http://localhost:31371'
-  ]
+  // wikis are passed in as last arg and are JSON encoded array
+  let wikiUrls = JSON.parse(process.argv[process.argv.length-1])
   wikiUrls.forEach((u) => {
     let wiki = new Wiki(u)
-    events.forEach((e) => wiki.on(e, (...args) => console.log('view', e, args)))
+    //events.forEach((e) => wiki.on(e, (...args) => console.log('view', e, args)))
     wikiBar.add(wiki)
   })
   wikiBar.activateByIndex(0)
