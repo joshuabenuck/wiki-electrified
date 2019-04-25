@@ -162,6 +162,7 @@ class Wiki {
   destroy(win) {
     this.queuedListeners = []
     if (!this.view) return
+    win.setBrowserView(null)
     this.view.destroy()
   }
 
