@@ -39,11 +39,12 @@ There's a lot missing from this tool. Here's a list of the top of mind items.
 - [x] Support for logging into a wiki.
 - [x] Ability to open arbitrary fedwiki sites.
 - [x] Support for running internal wiki server in non-read-only mode.
+- [x] Prefetch wiki favicons.
+- [x] Support for passing in command line args to customize server properties.
+- [ ] Ability to suppress startup of internal wiki server instance.
+- [ ] Properly update the title to reflect currently displayed wiki.
 - [ ] Saving of currently open wikis and their states in localStorage.
 - [ ] Caching of fedwiki site favicons across app restarts.
-- [ ] Properly update the title to reflect currently displayed wiki.
-- [ ] Ability to suppress startup of internal wiki server instance.
-- [ ] Support for passing in command line args to customize server properties.
 - [ ] Systray integration to support running the app in headless mode.
 - [ ] Support for a server-only mode of operation.
 - [ ] A splash screen.

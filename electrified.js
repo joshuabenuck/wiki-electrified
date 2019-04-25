@@ -78,17 +78,14 @@ class WikiBar {
 
 class Wiki {
   constructor(url) {
-    this.site = '' // parse site from url
     this.view = null
-    this.url = url // need to listen to event to keep up to date
-    this.favicon = null // need to listen to event to get
+    this.url = new URL(url)
+    this.favicon = new URL('favicon.png', this.url.origin).toString()
     this.queuedListeners = []
     this.id = this._itemId()
     this.listeners = {}
     this.localEvents = ['activate', 'icon-changed']
-    this.localEvents.forEach((e) => {
-      this.listeners[e] = []
-    })
+    this.localEvents.forEach((e) => { this.listeners[e] = [] })
   }
 
   // begin: from random.coffee
@@ -125,12 +122,18 @@ class Wiki {
         l(this.favicon)
       })
     })
+    this.view.webContents.on('did-navigate', (e, url) => {
+      this.url = new URL(url)
+    })
+    this.view.webContents.on('did-navigate-in-page', (e, url) => {
+      this.url = new URL(url)
+    })
     for (let listener of this.queuedListeners) {
       this.on.apply(this, listener)
     }
     this.queuedListeners = []
     this.view.setAutoResize({ width: true, height: true })
-    this.view.webContents.loadURL(this.url)
+    this.view.webContents.loadURL(this.url.toString())
     return this.view
   }
 
