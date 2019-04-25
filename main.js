@@ -325,7 +325,7 @@ winEvents = [
   'focus',
   'show',
   'hide',
-  'read-to-shaow',
+  'read-to-show',
   'maximize',
   'unmaximize',
   'minimize',
@@ -355,6 +355,10 @@ function createWindow () {
   win.loadURL(`file://${__dirname}/electrified.html`)
 
   win.webContents.on('did-finish-load', () => {
+  })
+
+  win.on('focus', () => {
+    win.webContents.executeJavaScript(`wikiBar.activate(wikiBar.active)`)
   })
 
   // Emitted when the window is closed.

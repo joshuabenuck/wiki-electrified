@@ -1,4 +1,11 @@
-const {getCurrentWindow, BrowserView} = require('electron').remote
+const {getCurrentWindow, BrowserView, shell} = require('electron').remote
+
+window.followLink = (url) => {
+  if (url.indexOf('http://') == 0 || url.indexOf('https://') == 0) {
+    shell.openExternal(url)
+  }
+}
+
 
 const showDialog = (msg, cb) => {
   let input = $('<input>')
@@ -127,6 +134,11 @@ class Wiki {
     })
     this.view.webContents.on('did-navigate-in-page', (e, url) => {
       this.url = new URL(url)
+    })
+    this.view.webContents.on('new-window', (
+      e, url, frameName, options, additionalFeatures, referrer
+    ) => {
+      followLink(url)
     })
     for (let listener of this.queuedListeners) {
       this.on.apply(this, listener)
