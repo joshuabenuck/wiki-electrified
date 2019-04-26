@@ -138,9 +138,11 @@ class Wiki {
       win.setTitle(this.url.origin)
     })
     this.view.webContents.on('new-window', (
-      e, url, frameName, options, additionalFeatures, referrer
+      e, url, frameName, disposition, options, additionalFeatures, referrer
     ) => {
-      followLink(url)
+      if(disposition == 'foreground-tab') {
+        followLink(url)
+      }
     })
     for (let listener of this.queuedListeners) {
       this.on.apply(this, listener)
