@@ -2,10 +2,10 @@ const debug = require('debug')
 //debug.enable('*')
 //debug.enable('express:*')
 const {app, Menu, BrowserWindow, BrowserView} = require('electron')
-const server = require('wiki-server')
-const path = require('path')
 const optimist = require('optimist')
 const cc = require('config-chain')
+const server = require('wiki-server')
+const path = require('path')
 
 //require("electron-reload")(__dirname)
 
@@ -173,8 +173,8 @@ const template = [
         label: 'Reload Wiki',
         accelerator: 'CmdOrCtrl+R',
         click: () => win.webContents.executeJavaScript(
-          "let webContents = wikiBar.active.view.webContents;" + 
-          "webContents.loadURL(webContents.getURL())"
+          "{let webContents = wikiBar.active.view.webContents;" + 
+          "webContents.loadURL(webContents.getURL())}"
         )
       },
       {
