@@ -131,9 +131,11 @@ class Wiki {
     })
     this.view.webContents.on('did-navigate', (e, url) => {
       this.url = new URL(url)
+      win.setTitle(this.url.origin)
     })
     this.view.webContents.on('did-navigate-in-page', (e, url) => {
       this.url = new URL(url)
+      win.setTitle(this.url.origin)
     })
     this.view.webContents.on('new-window', (
       e, url, frameName, options, additionalFeatures, referrer
