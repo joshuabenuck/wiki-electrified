@@ -19,6 +19,18 @@ npm install
 npm start
 ```
 
+## Features
+
+- Open a wiki with CmdOrCtrl+O.
+- Close an open wiki with CmdOrCtrl+W (except for the last open wiki).
+- Window title changes to the origin of the currently viewed wiki.
+
+## Key Gaps / Blockers
+
+- Not possible to drag wiki pages between wikis.
+- Not possible to reorder open wiki.
+- Internal authentication to the bundled wiki server immediately expires.
+
 ## Config Options
 
 Most of the non-farm and non-cluster related options of [wiki-client](https://github.com/fedwiki/wiki-client) are supported.
@@ -32,24 +44,7 @@ npm start -- --security_type friends --wikis http://localhost:31357,https://fed.
 
 The development journal and design notes are at [fed.wiki.randombits.xyz](https://fed.wiki.randombits.xyz/electrified-wiki.html).
 
-## TODOs
+## Open Issues
 
-There's a lot missing from this tool. Here's a list of the top of mind items.
-
-- [x] Support for logging into a wiki.
-- [x] Ability to open arbitrary fedwiki sites.
-- [x] Support for running internal wiki server in non-read-only mode.
-- [x] Prefetch wiki favicons.
-- [x] Support for passing in command line args to customize server properties.
-- [ ] Ability to suppress startup of internal wiki server instance.
-- [ ] Properly update the title to reflect currently displayed wiki.
-- [ ] Saving of currently open wikis and their states in localStorage.
-- [ ] Caching of fedwiki site favicons across app restarts.
-- [ ] Systray integration to support running the app in headless mode.
-- [ ] Support for a server-only mode of operation.
-- [ ] A splash screen.
-- [ ] A welcome page with configuration options.
-- [ ] A non-electron application icon.
-- [ ] Binary release packages.
-- [ ] Auto updating of released packages.
+Issues are tracked within [the project](https://github.com/joshuabenuck/wiki-electrified/issues).
 
