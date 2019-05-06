@@ -31,7 +31,7 @@ class WikiBar {
     this.wikis = []
     this.active = null
     this.zoomFactor = 1.0
-    this._changeSize({margin: 5, width: 32})
+    this._changeSize({margin: 10, width: 32})
     this.yoffset = 0
     this._zoom({delta: 0})
   }
@@ -74,7 +74,7 @@ class WikiBar {
     if (sizes.width) {
       this.width = sizes.width
     }
-    this.xoffset = (this.width + (this.margin*2)) * this.zoomFactor
+    this.xoffset = (this.width + (this.margin*2))
     $('#wikiBar').css({width: `${this.xoffset}px`})
       .find(".wikiIcon").css({margin: this.margin})
       .find("img").css({
@@ -84,7 +84,7 @@ class WikiBar {
     // just update the active?
     // the others can be updated once displayed
     this.wikis.forEach((w) =>
-      w.setBounds(this.win, {x:this.xoffset, y:this.yoffset}))
+      w.setBounds(this.win, {x:this.xoffset*this.zoomFactor, y:this.yoffset}))
   }
 
   add(wiki) {
