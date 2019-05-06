@@ -92,15 +92,22 @@ class WikiBar {
     wiki.setBounds(this.win, {x:this.xoffset, y:this.yoffset})
     wiki.setZoomFactor(this.zoomFactor)
     this.wikis.push(wiki)
-    let iconTab = $("<div>").attr({id: wiki.id}).addClass('wikiIcon')
+    let $iconTab = $("<div>").attr({id: wiki.id}).addClass('wikiIcon')
       .css({margin: this.margin})
       .click(() => wiki.activate(this.win))
       .append(
         $("<img>").attr({src: wiki.favicon})
           .css({width: `${this.width}px`, height: `${this.width}px`})
       ).appendTo("#wikiBar")
+    $iconTab
+      .on('dragover', (evt) => {
+        if (!$iconTab.hasClass('selected')) {
+          $iconTab.click()
+        }
+        evt.preventDefault()
+      })
     wiki.on('icon-changed', (url) => {
-      iconTab.find("img").attr({src: url})
+      $iconTab.find("img").attr({src: url})
     })
     wiki.on('activate', () => {
       this.active = wiki
