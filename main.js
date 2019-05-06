@@ -169,6 +169,20 @@ const template = [
     label: 'View',
     submenu: [
       {
+        label: 'History Back',
+        accelerator: 'Alt+Left',
+        click: () => win.webContents.executeJavaScript(
+          "wikiBar.active.view.webContents.goBack()"
+        )
+      },
+      {
+        label: 'History Forward',
+        accelerator: 'Alt+Right',
+        click: () => win.webContents.executeJavaScript(
+          "wikiBar.active.view.webContents.goForward()"
+        )
+      },
+      {
         label: 'Reload Wiki',
         accelerator: 'CmdOrCtrl+R',
         click: () => win.webContents.executeJavaScript(
