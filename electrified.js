@@ -30,16 +30,74 @@ class WikiBar {
     this.win = win
     this.wikis = []
     this.active = null
+    this.zoomFactor = 1.0
+    this._changeSize({margin: 5, width: 32})
+    this.yoffset = 0
+    this._zoom({delta: 0})
+  }
+
+  toggleWikiVisibility() {
+    this.active.toggleVisibility(this.win)
+  }
+
+  _zoom(opts) {
+    // race condition - not sure if it will be an issue
+    this.win.webContents.getZoomFactor((zf) => {
+      if (opts.target) {
+        this.zoomFactor = opts.target
+      }
+      if (opts.delta) {
+        this.zoomFactor = zf + opts.delta
+      }
+      this.win.webContents.setZoomFactor(this.zoomFactor)
+      this.wikis.forEach((w) => w.setZoomFactor(this.zoomFactor))
+      this._changeSize({})
+    })
+  }
+
+  zoomIn() {
+    this._zoom({delta: +0.1})
+  }
+
+  zoomOut() {
+    this._zoom({delta: -0.1})
+  }
+
+  resetZoom() {
+    this._zoom({target: 1.0})
+  }
+
+  _changeSize(sizes) {
+    if (sizes.margin) {
+      this.margin = sizes.margin
+    }
+    if (sizes.width) {
+      this.width = sizes.width
+    }
+    this.xoffset = (this.width + (this.margin*2)) * this.zoomFactor
+    $('#wikiBar').css({width: `${this.xoffset}px`})
+      .find(".wikiIcon").css({margin: this.margin})
+      .find("img").css({
+        width: `${this.width}px`,
+        height: `${this.width}px`
+      })
+    // just update the active?
+    // the others can be updated once displayed
+    this.wikis.forEach((w) =>
+      w.setBounds(this.win, {x:this.xoffset, y:this.yoffset}))
   }
 
   add(wiki) {
     if(this.active == null) this.active = wiki
+    wiki.setBounds(this.win, {x:this.xoffset, y:this.yoffset})
+    wiki.setZoomFactor(this.zoomFactor)
     this.wikis.push(wiki)
     let iconTab = $("<div>").attr({id: wiki.id}).addClass('wikiIcon')
+      .css({margin: this.margin})
       .click(() => wiki.activate(this.win))
       .append(
         $("<img>").attr({src: wiki.favicon})
-          .css({width: '10px', height: '10px'})
+          .css({width: `${this.width}px`, height: `${this.width}px`})
       ).appendTo("#wikiBar")
     wiki.on('icon-changed', (url) => {
       iconTab.find("img").attr({src: url})
@@ -93,6 +151,8 @@ class Wiki {
     this.listeners = {}
     this.localEvents = ['activate', 'icon-changed']
     this.localEvents.forEach((e) => { this.listeners[e] = [] })
+    this.bounds = {}
+    this.zoomFactor = 1.0
   }
 
   // begin: from random.coffee
@@ -119,7 +179,8 @@ class Wiki {
     this.view = new BrowserView({
       webPreferences: {
         nodeIntegration: false,
-        preload: `${__dirname}/preload.js`
+        preload: `${__dirname}/preload.js`,
+        zoomFactor: this.zoomFactor
       }
     })
     win.setBrowserView(this.view)
@@ -153,6 +214,25 @@ class Wiki {
     return this.view
   }
 
+  setBounds(win, bounds) {
+    Object.assign(this.bounds, bounds)
+    if (this.view) {
+      let [width, height] = win.getContentSize()
+      // setBounds doesn't like floating point params
+      this.view.setBounds({
+        x: Math.floor(this.bounds.x), y: this.bounds.y,
+        width: Math.floor(width-this.bounds.x), height: height
+      })
+    }
+  }
+
+  setZoomFactor(zf) {
+    this.zoomFactor = zf
+    if (this.view) {
+      this.view.webContents.setZoomFactor(this.zoomFactor)
+    }
+  }
+
   activate(win) {
     this._display(win)
     this.listeners['activate'].forEach((l) => { l() })
@@ -162,8 +242,8 @@ class Wiki {
     if (!this.view) { this._createView(win) }
     win.webContents.focus()
     win.setBrowserView(this.view)
-    let [width, height] = win.getContentSize()
-    this.view.setBounds({ x: 20, y: 0, width: width-20, height: height })
+    this.view.webContents.setZoomFactor(this.zoomFactor)
+    this.setBounds(win, {})
     this.view.webContents.focus()
     //this.view.webContents.openDevTools()
   }

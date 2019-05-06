@@ -6,7 +6,6 @@ const optimist = require('optimist')
 const cc = require('config-chain')
 const server = require('wiki-server')
 const path = require('path')
-
 //require("electron-reload")(__dirname)
 
 // begin: taken from wiki/cli.coffee
@@ -204,7 +203,7 @@ const template = [
         label: 'Toggle Wiki Visibility',
         accelerator: 'CmdOrCtrl+H',
         click: () => win.webContents.executeJavaScript(
-          "wikiBar.active.toggleVisibility(win)"
+          "wikiBar.toggleWikiVisibility()"
         )
       },
       { type: 'separator' },
@@ -215,36 +214,21 @@ const template = [
         label: 'Actual Size',
         accelerator: 'CmdOrCtrl+0',
         click: () => {
-          win.webContents.executeJavaScript(`
-            webContents = wikiBar.active.view.webContents
-            webContents.getZoomFactor((zf) => {
-              webContents.setZoomFactor(1.0)
-            })
-          `)
+          win.webContents.executeJavaScript(`wikiBar.resetZoom()`)
         }
       },
       {
         label: 'Zoom In',
         accelerator: 'CmdOrCtrl+Plus',
         click: () => {
-          win.webContents.executeJavaScript(`
-            webContents = wikiBar.active.view.webContents
-            webContents.getZoomFactor((zf) => {
-              webContents.setZoomFactor(zf+0.1)
-            })
-          `)
+          win.webContents.executeJavaScript(`wikiBar.zoomIn()`)
         }
       },
       {
         label: 'Zoom Out',
         accelerator: 'CmdOrCtrl+-',
         click: () => {
-          win.webContents.executeJavaScript(`
-            webContents = wikiBar.active.view.webContents
-            webContents.getZoomFactor((zf) => {
-              webContents.setZoomFactor(zf-0.1)
-            })
-          `)
+          win.webContents.executeJavaScript(`wikiBar.zoomOut()`)
         }
       },
       { type: 'separator' },
