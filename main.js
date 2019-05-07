@@ -565,7 +565,7 @@ function createWindow () {
   })
 
   win.on('focus', () => {
-    //win.webContents.executeJavaScript(`wikiBar.activate(wikiBar.active)`)
+    win.webContents.executeJavaScript(`wikiBar.activate(wikiBar.active)`)
   })
 
   win.webContents.on('did-finish-load', () => {
