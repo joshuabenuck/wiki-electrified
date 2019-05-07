@@ -116,6 +116,10 @@ const cleanup = (e) => {
     v.destroy()
   })
   win.removeAllListeners()
+  for (id of Object.keys(wikis)) {
+    wikis[id].destroy()
+    delete wikis[id]
+  }
   //events.forEach((e) => win.webContents.on(e, (...args) => console.log('win', e, args)))
 }
 
