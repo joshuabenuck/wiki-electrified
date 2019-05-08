@@ -352,6 +352,7 @@ class Wiki {
         x: Math.floor(xoffset*zoomFactor), y: yoffset,
         width: Math.floor(width-(xoffset*zoomFactor)), height: height
       })
+      this.view.webContents.setZoomFactor(zoomFactor)
     }
   }
 
