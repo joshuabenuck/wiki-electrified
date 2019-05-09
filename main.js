@@ -1,6 +1,19 @@
 const debug = require('debug')
 //debug.enable('*')
 //debug.enable('express:*')
+const crypto = require('crypto')
+const origCreateDecipheriv = crypto.createDecipheriv
+crypto.createDecipheriv = (alg, key, iv) => {
+  if (alg == 'aes256') alg = 'aes-256-ctr'
+  console.log('createDecipheriv', alg)
+  return origCreateDecipheriv.call(crypto, alg, key, iv)
+}
+const origCreateCipheriv = crypto.createCipheriv
+crypto.createCipheriv = (alg, key, iv) => {
+  if (alg == 'aes256') alg = 'aes-256-ctr'
+  console.log('createCipheriv', alg)
+  return origCreateCipheriv.call(crypto, alg, key, iv)
+}
 const {
   app, Menu, BrowserWindow, BrowserView, ipcMain, getCurrentWindow, shell
 } = require('electron')
