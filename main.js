@@ -21,6 +21,7 @@ const optimist = require('optimist')
 const cc = require('config-chain')
 const server = require('wiki-server')
 const path = require('path')
+const farm = require('./farm')
 //require("electron-reload")(__dirname)
 
 // begin: taken from wiki/cli.coffee
@@ -42,6 +43,10 @@ argv = optimist
     alias     : 'r',
     describe  : 'Application root folder'
   })
+  .options('farm', {
+    alias     : 'f',
+    describe  : 'Turn on the farm?'
+  })
   .options('security_type', {
     describe  : 'The security plugin to use, see documentation for additional parameters'
   })
@@ -54,6 +59,16 @@ argv = optimist
   })
   .options('id', {
     describe  : 'Set the location of the owner identity file'
+  })
+  .options('autoseed', {
+    describe  : 'Seed all sites in a farm to each other site in the farm.',
+    boolean   : true
+  })
+  .options('allowed', {
+    describe  : 'comma separated list of allowed host names for farm mode.'
+  })
+  .options('wikiDomains', {
+    describe  : 'use in farm mode to define allowed wiki domains and any wiki domain specific configuration, see documentation.'
   })
   .options('uploadLimit', {
     describe  : 'Set the upload size limit, limits the size page content items, and pages that can be forked'
@@ -602,17 +617,29 @@ let wikiApp, wikiServer
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-  wikiApp = server(config)
-  wikiApp.on('owner-set', (e) => {
-    wikiServer = wikiApp.listen(wikiApp.startOpts.port, wikiApp.startOpts.host)
-    console.log("Federated Wiki server listening on", wikiApp.startOpts.port,
-      "in mode:", wikiApp.settings.env)
-    if(argv.security_type == './security') {
-      console.log('INFORMATION : Using default security - Wiki will be read-only\n')
+  if(config.farm) {
+    console.log('Wiki starting in Farm mode, navigate to a specific server to start it.\n')
+    if(!argv.wikiDomains && !argv.allowed) {
+      console.log('WARNING : Starting Wiki Farm in promiscous mode\n')
     }
-    wikiApp.emit('running-serv', wikiServer)
-    createWindow()
-  })
+    if(argv.security_type == './security') {
+      console.log('INFORMATION : Using default security - Wiki Farm will be read-only\n')
+    }
+    wikiServer = farm(config)
+  }
+  else {
+    wikiApp = server(config)
+    wikiApp.on('owner-set', (e) => {
+      wikiServer = wikiApp.listen(wikiApp.startOpts.port, wikiApp.startOpts.host)
+      console.log("Federated Wiki server listening on", wikiApp.startOpts.port,
+        "in mode:", wikiApp.settings.env)
+      if(argv.security_type == './security') {
+        console.log('INFORMATION : Using default security - Wiki will be read-only\n')
+      }
+      wikiApp.emit('running-serv', wikiServer)
+    })
+  }
+  createWindow()
 })
 
 // Quit when all windows are closed.
