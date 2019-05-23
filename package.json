@@ -24,6 +24,7 @@
   "homepage": "https://github.com/joshuabenuck/wiki-electrified#readme",
   "dependencies": {
     "electron": "^4.1.4",
+    "electron-spellchecker": "^2.0.2",
     "optimist": "^0.6.1",
     "wiki-client": "^0.15.3",
     "wiki-plugin-activity": "^0.4.0",
@@ -70,5 +71,7 @@
     "wiki-security-passportjs": "^0.4.0",
     "wiki-server": "^0.15.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "electron-rebuild": "^1.8.4"
+  }
 }

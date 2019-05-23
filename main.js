@@ -22,6 +22,7 @@ const cc = require('config-chain')
 const server = require('wiki-server')
 const path = require('path')
 const farm = require('./farm')
+const fs = require('fs')
 //require("electron-reload")(__dirname)
 
 // begin: taken from wiki/cli.coffee
@@ -108,8 +109,7 @@ config = cc(argv,
     security_type: './security',
     data: path.join(getUserHome(), '.wiki'), // see also defaultargs
     packageDir: path.resolve(path.join(__dirname, 'node_modules')),
-    cookieSecret: require('crypto').randomBytes(64).toString('hex'),
-    wikis: ["http://localhost:31371"]
+    cookieSecret: require('crypto').randomBytes(64).toString('hex')
   }).store
 
 // If h/help is set print the generated help message and exit.
@@ -337,22 +337,25 @@ class Wiki {
     win.setBrowserView(this.view)
     this.view.webContents.on('page-favicon-updated', (e, urls) => {
       this.favicon = urls[0]
-      /*this.listeners['icon-changed'].forEach((l) => {
-        l(this.favicon)
-      })*/
       win.webContents.send('wiki-icon-changed', this.id, this.favicon)
     })
     this.view.webContents.on('did-navigate', (e, url) => {
       this.url = new URL(url)
       win.setTitle(this.url.origin)
+      persistLoadedWikis()
     })
     this.view.webContents.on('did-navigate-in-page', (e, url) => {
       this.url = new URL(url)
       win.setTitle(this.url.origin)
+      persistLoadedWikis()
     })
     this.view.webContents.on('new-window', (
       e, url, frameName, disposition, options, additionalFeatures, referrer
     ) => {
+      if(url.indexOf('loginDialog') != -1) {
+        console.log('allowing login popup.')
+        return
+      }
       e.preventDefault()
       if(disposition == 'foreground-tab') {
         followLink(url)
@@ -524,6 +527,7 @@ ipcMain.on('set-display-offsets', (evt, _xoffset, _yoffset) => {
 })
 
 ipcMain.on('activate-wiki', (evt, id) => {
+  console.log('activating wiki:', id)
   wikis[id].activate()
 })
 
@@ -542,6 +546,7 @@ ipcMain.on('add-and-activate-wiki', (evt, site) => {
 
 ipcMain.on('remove-wiki', (evt, id) => {
   wikis[id].destroy()
+  persistLoadedWikis()
   delete wikis[id]
 })
 
@@ -569,8 +574,10 @@ const resetZoom = () => {
 }
 
 const addWiki = (site) => {
+  console.log('adding wiki:', site)
   let wiki = new Wiki(site)
   wikis[wiki.id] = wiki
+  persistLoadedWikis()
   //events.forEach((e) => wiki.on(e, (...args) => console.log('view', e, args)))
   win.webContents.send('add-wiki', wiki.id, wiki.favicon)
   return wiki.id
@@ -593,14 +600,40 @@ function createWindow () {
     win.loadURL(`file://${__dirname}/electrified.html`)
   })
 
-  win.on('focus', () => {
-    win.webContents.executeJavaScript(`wikiBar.activate(wikiBar.active)`)
-  })
+  persistLoadedWikis = () => {
+    fs.writeFileSync(path.join(config.data, 'loaded-wikis.json'),
+      JSON.stringify(Object.values(wikis).map((w) => w.url)))
+  }
+
+  readLoadedWikis = () => {
+    try {
+      return fs.readFileSync(path.join(config.data, 'loaded-wikis.json'))
+    }
+    catch(e) {
+      console.log('Unable to read previously loaded wikis:', e.message)
+    }
+  }
 
   win.webContents.on('did-finish-load', () => {
-    let wikiUrls = config.wikis
-    let first = true
+    let wikiUrls = ["http://localhost:31371"]
+    console.log('Getting previous wiki urls.')
+    let previousWikis = readLoadedWikis()
+    if (previousWikis) {
+      wikiUrls = JSON.parse(previousWikis)
+      console.log('Previous wiki urls:', wikiUrls)
+    }
+    if (config.wikis) {
+      wikiUrls = config.wikis
+      console.log('Command line wiki urls:', wikiUrls)
+    }
+    console.log('Using wiki urls:', wikiUrls)
     wikiUrls.forEach((u) => addWiki(u))
+    win.on('focus', () => {
+      win.webContents.executeJavaScript(`wikiBar.activate(wikiBar.active)`)
+    })
+
+    //let wikiUrls = config.wikis
+    //wikiUrls.forEach((u) => addWiki(u))
   })
 
   // Emitted when the window is closed.
