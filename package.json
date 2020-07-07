@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/joshuabenuck/wiki-electrified#readme",
   "dependencies": {
-    "electron": "^4.1.4",
+    "electron": "^9.1.0",
     "electron-spellchecker": "^2.0.2",
     "optimist": "^0.6.1",
     "wiki-client": "^0.15.3",
